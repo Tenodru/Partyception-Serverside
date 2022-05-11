@@ -21,7 +21,7 @@ This code was developed by Alex Kong and Victor Do. Below are the main contribut
 ## Contributions and Breakdown - Alex
 `lobby.php`
 
-### Retrieving Players
+#### Retrieving Players
 My work in this script began when we began tracking player statuses and developing dynamic lobbies. We needed a way to tell how many players were eliminated at any point in the game (primarily used at the end of a game), so I wrote a few functions that handle this.
 ```php
 //GET LIST OF PLAYERS FUNCTION
@@ -109,7 +109,7 @@ These functions are intended to make tracking and grabbing eliminated players ea
 
 `updatePlayerStatus.php`
 
-### Kicking Players
+#### Kicking Players
 I also wrote functions for `updatePlayerStatus.php` near the tail end of development, when we needed functionality for specific use cases. In particular, we needed to be able to "kick" players who were marked as disconnected - players whose clients don't send an end-of-round update to the server within a certain time limit, as determined by the game's clientside code.
 ```php
 else if ($function == "kick")
@@ -132,3 +132,10 @@ else if ($function == "kick")
 }
 ```
 This function checks for players who are still marked as "answering" or even "prestart" at the end of a round. By default, the game client will send either "correct", or "eliminated" at once a round ends - if a player is still marked as "answering" or "prestart", then their client was paused, stopped, or otherwise lost connection to the server, so we will eliminate them.
+
+### Other Contributions
+I also made edits and tweaks to various other functions and code as needed during the development process of the game. 
+
+
+
+## Contributions and Breakdown - Victor
