@@ -105,3 +105,30 @@ if ($_REQUEST["function"] == "getRoundEliminatedPlayers")
 ```
 The first function creates a list of eliminated players and is called the first time a player is eliminated. The second function grabs this list, looking for players that were eliminated in the specified round. It then returns these players, or returns "" if no players were eliminated this round.
 These functions are intended to make tracking and grabbing eliminated players easier, and were part of our move to shift calculations to serverside instead of clientside.
+
+
+`updatePlayerStatus.php`
+
+### Kicking Players
+I also wrote functions for `updatePlayerStatus.php` near the tail end of development, when we needed functionality for specific use cases. In particular, we needed to be able to "kick" players who were marked as disconnected - players whose clients don't send an end-of-round update to the server within a certain time limit, as determined by the game's clientside code.
+```php
+else if ($function == "kick")
+{
+    $lobbyNumber = $_REQUEST["lobbyNumber"];
+    $question = $_REQUEST["question"];
+
+    foreach(glob("lobbies/".$lobbyNumber."/playerStatus".'/*') as $file)
+    {
+        $line = file_get_contents($file);
+        $pieces = explode(":", $line);
+        if ($pieces[1] == "answering" || $pieces[1] == "prestart"){
+            echo "someone is not ready";
+            $playerName = $pieces[0];
+            $txtfilePath = "lobbies/"."$lobbyNumber"."/playerStatus/".$playerName."Status".".txt";
+            $txtfile = fopen($txtfilePath, "w");
+            fwrite($txtfile, $playerName.":"."eliminated".".".$question);
+        }
+    }
+}
+```
+This function checks for players who are still marked as "answering" or even "prestart" at the end of a round. By default, the game client will send either "correct", or "eliminated" at once a round ends - if a player is still marked as "answering" or "prestart", then their client was paused, stopped, or otherwise lost connection to the server, so we will eliminate them.
