@@ -141,7 +141,11 @@ I also made edits and tweaks to various other functions and code as needed durin
 
 
 ## Contributions and Breakdown - Victor
+My contribution on the server-side involved setting up the foundation of the system we would use to handle the server side of Partyception. After setting up the foundation, Alex and I worked together to add the neccessary functions we discovered that we needed as we developed our server side. Here is a compilation of most of my contribution that should also give an overview at how the website database works.
+
 `lobby.php`
+
+The following function creates the lobbies that streamers use to play games with their audience. Lobbies are created as folders that contain the data necessary to conduct the game, such as status files of each player, a lobby status file, and more. The function sets the player who creates the lobby as the leader of the lobby.
 
 #### Creating Lobbies
 ```php
@@ -200,6 +204,8 @@ I also made edits and tweaks to various other functions and code as needed durin
     }
  ```
  
+ The following function is used by players to join an existing lobby. The function adds the player's name to a text file that tracks the number of players in a game, so that a player status file can be created once the game starts.
+ 
  #### Join Game Function
  ```php
  //JOIN LOBBY FUNCTION
@@ -225,6 +231,8 @@ I also made edits and tweaks to various other functions and code as needed durin
         }
     }
  ```
+ 
+ The following function fully creates the lobby when the host decides to start the game for their players and edit various settings. A player status folder is created with individual player status text files for each player, a minigame status file is created, and the lobby status changes to "start".
  
  #### Start Game Function
  ```php
@@ -285,6 +293,8 @@ I also made edits and tweaks to various other functions and code as needed durin
  
  `question.php`
  
+ The following function is run when a round is completed on the host's game, which updates the lobby status appropriately and eliminates player who timed out or got the question wrong.
+ 
  #### Complete Round Function
  
  ```php
@@ -334,6 +344,8 @@ I also made edits and tweaks to various other functions and code as needed durin
  
  `updatePlayerStatus.php`
  
+Since player status files are important for the host to understand what is going on with each player, player status files have to be updated whenever a player's current game status changes. The update status function is used on the players' games to edit their player status files in the web database, while the retrieve function is used by the host to retrieve their players' current status.
+ 
  #### Updating and Retrieving Player Status
  
  ```php
@@ -373,6 +385,8 @@ I also made edits and tweaks to various other functions and code as needed durin
         echo "everyone is ready";
     }
  ```
+
+This function is run whenever a player chooses an answer in their game. Depending on whether the answer is correct or wrong, their player status will be changed as such and can possibly be eliminated when the round completes.
  
  #### Resolving Outcomes for Player Answers
  
@@ -396,3 +410,7 @@ I also made edits and tweaks to various other functions and code as needed durin
         echo "player successfully answered";
     }
 ```
+
+#### Other Contributions
+
+The above snippets of code are not a comprehensive list of everything I contributed for Partyception, however it should provide a look into the foundation of how Partyception works on the server side and what Alex and I continued the build upon through the development of Partyception.
