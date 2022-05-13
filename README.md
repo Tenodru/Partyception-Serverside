@@ -141,3 +141,258 @@ I also made edits and tweaks to various other functions and code as needed durin
 
 
 ## Contributions and Breakdown - Victor
+`lobby.php`
+
+#### Creating Lobbies
+```php
+//CREATING LOBBY FUNCTION
+    if ($_REQUEST["function"] == "createLobby"){
+        $playerName = $_REQUEST["playerName"];
+        
+        if (!in_array($lobbyNumber, $lobbyFolder))
+        {
+            //CREATING NEW LOBBY
+            $newFolder = "lobbies/".$lobbyNumber;
+            mkdir($newFolder);
+            chmod($newFolder, 0777);
+            
+            //STATUS TRACKING FILE
+            $txtfilePath = "lobbies/".$lobbyNumber."/"."lobbyStatus".".txt";
+            $txtfile = fopen($txtfilePath, "w");
+            $txt = "";
+            fwrite($txtfile, $txt);
+            fclose($txtfile);
+            chmod($txtfilePath, 0777);
+            
+            //ADDING PLAYER AS LEADER
+            $txtfilePath = "lobbies/".$lobbyNumber."/"."players".".txt";
+            $txtfile = fopen($txtfilePath, "w");
+            $txt = "";
+            $txt .= "Leader: ".$playerName."\n";
+            fwrite($txtfile, $txt);
+            fclose($txtfile);
+            chmod($txtfilePath, 0777);
+            
+            //ADD LOBBY TO LOBBYLIST.TXT
+            $txtfilePath = "lobbies/lobbyList.txt";
+            $txtfile = fopen($txtfilePath, "a");
+            $txt = $lobbyNumber."/";
+            fwrite($txtfile, $txt);
+            fclose($txtfile);
+            chmod($txtfilePath, 0777);
+            
+            if (!file_exists("lobbies/".$lobbyNumber."/"."eliminatedPlayerList".".txt")) 
+            {
+                $filePath = "lobbies/".$lobbyNumber."/"."eliminatedPlayerList".".txt";
+                $file = fopen($filePath, "w");
+                $txt = "";
+                fwrite($file, $txt);
+                fclose($file);
+                chmod($filePath, 0777);
+            }
+            
+            echo "lobby created";
+        }
+        else
+        {
+            echo "lobby already exists";
+        }
+    }
+ ```
+ 
+ #### Join Game Function
+ ```php
+ //JOIN LOBBY FUNCTION
+    if ($_REQUEST["function"] == "joinLobby")
+    {
+        $playerName = $_REQUEST["playerName"];
+        
+        //CHECK IF LOBBY EXISTS
+        if (!in_array($lobbyNumber, $lobbyFolder))
+        {
+            echo "lobby does not exist";
+        }
+        else
+        {
+            //ADD PLAYER TO PLAYER TEXT FILE
+            $txtfilePath = "lobbies/".$lobbyNumber."/"."players".".txt";
+            $txtfile = fopen($txtfilePath, "a");
+            $txt = "";
+            $txt .= $playerName."\n";
+            fwrite($txtfile, $txt);
+            fclose($txtfile);
+            echo "lobby successfully joined";
+        }
+    }
+ ```
+ 
+ #### Start Game Function
+ ```php
+ //START GAME FUNCTION
+    if ($_REQUEST["function"] == "startGame")
+    {
+        $playerName = $_REQUEST["playerName"];
+        
+        //CREATE PLAYER STATUS FOLDER
+        $newFolder = "lobbies/".$lobbyNumber."/playerStatus";
+        mkdir($newFolder);
+        
+        //CREATE INDIVIDUAL PLAYER STATUS TEXT FILES FOR EACH PLAYER IN FOLDER
+        $playersPath = "lobbies/"."$lobbyNumber"."/"."players".".txt";
+        $playersFile = fopen($playersPath, "r");
+        if ($playersFile) {
+            while (($line = fgets($playersFile)) !== false) {
+                if (strpos($line, "Leader: ") !== false){
+                    $playerStatusPath = "lobbies/"."$lobbyNumber"."/playerStatus/".$playerName."Status".".txt";
+                    $playerStatusFile = fopen($playerStatusPath, "w");
+                    $playerStatusTxt = "";
+                    $playerStatusTxt .= $playerName.":awaiting";
+                }
+                else
+                {
+                    $playerStatusPath = "lobbies/"."$lobbyNumber"."/playerStatus/".trim($line)."Status".".txt";
+                    $playerStatusFile = fopen($playerStatusPath, "w");
+                    $playerStatusTxt = "";
+                    $playerStatusTxt .= trim($line).":awaiting";
+                }
+                fwrite($playerStatusFile, $playerStatusTxt);
+                fclose($playerStatusFile);
+            }
+            fclose($playersFile);
+        } else {
+            die("error opening file");
+        }
+        
+        //CREATE MINIGAME STATUS TEXT FILE
+        $txtfilePath = "lobbies/".$lobbyNumber."/"."questionStatus".".txt";
+        $txtfile = fopen($txtfilePath, "w");
+        $txt = "";
+        fwrite($txtfile, $txt);
+        fclose($txtfile);
+        chmod($txtfilePath, 0777);
+        
+        //CHANGE LOBBY STATUS TO START
+        $txtfilePath = "lobbies/".$lobbyNumber."/"."lobbyStatus".".txt";
+        $txtfile = fopen($txtfilePath, "w");
+        $txt = "start";
+        fwrite($txtfile, $txt);
+        fclose($txtfile);
+        chmod($txtfilePath, 0777);
+        
+        echo "successfully started game";
+    }
+ ```
+ 
+ `question.php`
+ 
+ #### Complete Round Function
+ 
+ ```php
+ //COMPLETE ROUND FUNCTION
+    else if ($function == "completeRound"){
+        $roundNumber = $_REQUEST["roundNumber"];
+        
+        //UPDATE LOBBY STATUS
+        $lobbyStatusPath = "lobbies/".$lobbyNumber."/"."lobbyStatus".".txt";
+        $lobbyTxtFile = fopen($lobbyStatusPath, "w");
+        fwrite($lobbyTxtFile, "completing");
+        fclose($lobbyTxtFile);
+        
+        //ELIMINATE PLAYERS
+        foreach(glob("lobbies/"."$lobbyNumber"."/playerStatus".'/*') as $file)
+        {
+            $line = file_get_contents($file);
+            
+            //SKIP IF PLAYER HAS ALREADY BEEN ELIMINATED
+            if (strpos($line, "eliminated")){
+                continue;
+            }
+            
+            $playerStatus = explode(":", $line);
+            $playerName = $playerStatus[0];
+            $outcome = $playerStatus[1];
+            
+            if ($outcome == "correct")
+            {
+                $playerStatusPath = $file;
+                $playerStatusFile = fopen($playerStatusPath, "w");
+                fwrite($playerStatusFile, $playerName.":awaiting");
+                fclose($playerStatusFile);
+            }
+            /*else if ($outcome == "eliminated")
+            {
+                $playerStatusPath = $file;
+                $playerStatusFile = fopen($playerStatusPath, "w");
+                fwrite($playerStatusFile, $playerName.":eliminated".".".$roundNumber);
+                fclose($playerStatusFile);
+            }*/
+        }
+        
+        echo "successfully completed round";
+    }
+ ```
+ 
+ `updatePlayerStatus.php`
+ 
+ #### Updating and Retrieving Player Status
+ 
+ ```php
+ if ($function == "update")
+    {
+        $lobbyNumber = $_REQUEST["lobbyNumber"];
+        $playerName = $_REQUEST["playerName"];
+        $newStatus = $_REQUEST["newStatus"];
+        
+        $txtfilePath = "lobbies/"."$lobbyNumber"."/playerStatus/".$playerName."Status".".txt";
+        
+        if (strpos(file_get_contents($txtfilePath), "eliminated") !== false){
+            return;
+        }
+        
+        $txtfile = fopen($txtfilePath, "w");
+        
+        fwrite($txtfile, $playerName.":".$newStatus);
+        fclose($txtfile);
+        
+        echo "successfully updated player status";
+    }
+    else if ($function == "retrieve")
+    {
+        $lobbyNumber = $_REQUEST["lobbyNumber"];
+        
+        foreach(glob("lobbies/".$lobbyNumber."/playerStatus".'/*') as $file)
+        {
+            $line = file_get_contents($file);
+            $pieces = explode(":", $line);
+            if ($pieces[1] == "answering" || $pieces[1] == "prestart"){
+                echo "someone is not ready";
+                return;
+            }
+        }
+        
+        echo "everyone is ready";
+    }
+ ```
+ 
+ #### Resolving Outcomes for Player Answers
+ 
+ ```php
+ else if ($function == "answerQuestion")
+    {
+        $lobbyNumber = $_REQUEST["lobbyNumber"];
+        $playerName = $_REQUEST["playerName"];
+        $outcome = $_REQUEST["outcome"];
+        
+        $txtfilePath = "lobbies/"."$lobbyNumber"."/playerStatus/".$playerName."Status".".txt";
+        
+        if (strpos(file_get_contents($txtfilePath), "eliminated") !== false){
+            return;
+        }
+        
+        $txtfile = fopen($txtfilePath, "w");
+        fwrite($txtfile, $playerName.":".$outcome);
+        fclose($txtfile);
+        
+        echo "player successfully answered";
+    }
+```
